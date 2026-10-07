@@ -1,0 +1,10 @@
+# =====================================================================
+# File: src/main/resources/application-local.properties.example
+# HOW TO USE:
+#   1. Copy this file in the same folder and name the copy
+#      application-local.properties   (remove ".example")
+#   2. Replace the values below with your own MySQL login.
+#   3. NEVER commit application-local.properties. It is listed in .gitignore.
+# =====================================================================
+spring.datasource.username=inventory_app
+spring.datasource.password=CHANGE_ME
