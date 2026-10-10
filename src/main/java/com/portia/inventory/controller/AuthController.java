@@ -6,8 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.portia.inventory.dto.LoginRequest;
-import com.portia.inventory.dto.UserResponse;
-import com.portia.inventory.entity.User;
+import com.portia.inventory.dto.LoginResponse;
 import com.portia.inventory.service.AuthService;
 
 @RestController
@@ -21,12 +20,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public UserResponse login(
+    public LoginResponse login(
             @RequestBody LoginRequest request) {
 
-        User user =
+        String token =
                 authService.authenticate(request);
 
-        return new UserResponse(user);
+        return new LoginResponse(
+                token,
+                "Bearer");
     }
 }
