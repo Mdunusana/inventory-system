@@ -3,6 +3,7 @@ package com.portia.inventory.controller;
 import java.time.LocalDate;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +20,7 @@ import com.portia.inventory.service.ReportService;
 
 @RestController
 @RequestMapping("/api/reports")
+@PreAuthorize("hasRole('ADMIN')")
 public class ReportController {
 
     private final ReportService reportService;
@@ -52,13 +54,11 @@ public class ReportController {
     @GetMapping("/best-selling")
     public ReportResponse<BestSellingRow> bestSelling(
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate from,
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate to,
 
             @RequestParam(defaultValue = "10")
@@ -87,13 +87,11 @@ public class ReportController {
     public PageResponse<StockMovementRow> stockMovements(
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate from,
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate to,
 
             @RequestParam(required = false)

@@ -1,9 +1,10 @@
 package com.portia.inventory.security;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -47,16 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String email =
                 jwtTokenService.extractUsername(token);
 
-System.out.println("================================");
-
-System.out.println("TOKEN RECEIVED: " + token);
-
-System.out.println("EMAIL EXTRACTED: " + email);
-
-System.out.println("================================");
-
-
-
+        System.out.println("================================");
+        System.out.println("TOKEN RECEIVED: " + token);
+        System.out.println("EMAIL EXTRACTED: " + email);
+        System.out.println("================================");
 
         if (email != null &&
                 SecurityContextHolder.getContext()
@@ -66,7 +61,9 @@ System.out.println("================================");
                     new UsernamePasswordAuthenticationToken(
                             email,
                             null,
-                            Collections.emptyList());
+                            List.of(
+                                    new SimpleGrantedAuthority(
+                                            "ROLE_ADMIN")));
 
             authToken.setDetails(
                     new WebAuthenticationDetailsSource()
@@ -79,8 +76,4 @@ System.out.println("================================");
         filterChain.doFilter(request, response);
     }
 }
-
-
-
-
 
