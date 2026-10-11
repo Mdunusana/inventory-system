@@ -19,6 +19,10 @@ public class UserResponse {
         this.role = user.getRole();
     }
 
+    public static UserResponse from(User user) {
+        return new UserResponse(user);
+    }
+
     public Long getUserId() {
         return userId;
     }

@@ -21,7 +21,6 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/stock")
-@PreAuthorize("hasRole('ADMIN')")
 public class StockController {
 
     private final StockService stockService;
@@ -32,6 +31,7 @@ public class StockController {
 
     @PostMapping("/receive")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN','SALES_INVENTORY')")
     public StockChangeResponse receive(
             @Valid @RequestBody ReceiveStockRequest request) {
 
@@ -40,6 +40,7 @@ public class StockController {
 
     @PostMapping("/adjust")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public StockChangeResponse adjust(
             @Valid @RequestBody AdjustStockRequest request) {
 

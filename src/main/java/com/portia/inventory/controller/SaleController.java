@@ -27,7 +27,6 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/sales")
-@PreAuthorize("hasAnyRole('ADMIN','SALES_INVENTORY')")
 public class SaleController {
 
     private final SaleService saleService;
@@ -37,6 +36,7 @@ public class SaleController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SALES_INVENTORY')")
     public ResponseEntity<SaleResponse> recordSale(
             @Valid @RequestBody SaleRequest request) {
 
@@ -58,6 +58,7 @@ public class SaleController {
      * (newest first)
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<SaleSummaryResponse> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -66,6 +67,7 @@ public class SaleController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public SaleResponse getById(
             @PathVariable Long id) {
 

@@ -38,7 +38,6 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    // Stored as text ("ADMIN")
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "role", nullable = false, length = 20)
@@ -48,7 +47,7 @@ public class User {
     private boolean active;
 
     protected User() {
-        // required by Hibernate
+        // Required by Hibernate
     }
 
     public User(
@@ -86,11 +85,23 @@ public class User {
         return passwordHash;
     }
 
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public Role getRole() {
         return role;
     }
 
     public boolean isActive() {
         return active;
+    }
+
+    public void activate() {
+        this.active = true;
+    }
+
+    public void deactivate() {
+        this.active = false;
     }
 }

@@ -28,20 +28,32 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
+
             .formLogin(form -> form.disable())
+
             .httpBasic(basic -> basic.disable())
+
             .sessionManagement(session ->
                     session.sessionCreationPolicy(
                             SessionCreationPolicy.STATELESS))
+
             .authorizeHttpRequests(auth -> auth
+
+                    // Public endpoints
                     .requestMatchers(
-        "/api/auth/**",
-        "/api/dashboard/**",
-        "/swagger-ui/**",
-        "/v3/api-docs/**")
-.permitAll()
+                            "/api/auth/login",
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**"
+                    ).permitAll()
+
+                    // User management = ADMIN only
+                    .requestMatchers("/api/users/**")
+                    .hasRole("ADMIN")
+
+                    // Everything else requires authentication
                     .anyRequest()
                     .authenticated())
+
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class);
