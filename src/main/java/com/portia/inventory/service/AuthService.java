@@ -29,10 +29,6 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenService = jwtTokenService;
         this.currentUserService = currentUserService;
-
-        // TEMPORARY DEBUG
-        System.out.println("BCrypt hash for Admin123!:");
-        System.out.println(passwordEncoder.encode("Admin123!"));
     }
 
     public String authenticate(LoginRequest request) {
@@ -48,11 +44,6 @@ public class AuthService {
         boolean matches = passwordEncoder.matches(
                 request.getPassword(),
                 user.getPasswordHash());
-
-        // TEMPORARY DEBUG
-        System.out.println("Login attempt for: " + request.getEmail());
-        System.out.println("Password entered: " + request.getPassword());
-        System.out.println("Password matches: " + matches);
 
         if (!matches) {
             throw new InvalidCredentialsException();
