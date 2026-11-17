@@ -2,6 +2,21 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
 
+// The middle part of a JWT holds the user's details, encoded in base64.
+// We only read it to decide what to SHOW; the backend still checks every request.
+function readRoleFromToken(token) {
+    try {
+        const payload = token
+            .split(".")[1]
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+        return JSON.parse(atob(payload)).role ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export default function LoginPage() {
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -42,7 +57,7 @@ export default function LoginPage() {
 
             login(data.accessToken, {
                 email,
-                role: "ADMIN"
+                role: readRoleFromToken(data.accessToken)
             });
 
             navigate("/");
