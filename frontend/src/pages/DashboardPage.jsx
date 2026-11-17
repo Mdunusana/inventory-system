@@ -58,7 +58,7 @@ export default function DashboardPage() {
                 >
                     <h3>Total Products</h3>
                     <p>
-                        {summary?.totalProducts ?? 0}
+                        {summary?.activeProducts ?? 0}
                     </p>
                 </div>
 
@@ -71,7 +71,7 @@ export default function DashboardPage() {
                 >
                     <h3>Low Stock</h3>
                     <p>
-                        {summary?.lowStockItems ?? 0}
+                        {summary?.lowStockCount ?? 0}
                     </p>
                 </div>
 
@@ -84,7 +84,7 @@ export default function DashboardPage() {
                 >
                     <h3>Out of Stock</h3>
                     <p>
-                        {summary?.outOfStockItems ?? 0}
+                        {summary?.outOfStockCount ?? 0}
                     </p>
                 </div>
             </div>
