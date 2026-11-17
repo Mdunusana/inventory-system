@@ -17,6 +17,7 @@ import ProductFormPage from "./pages/ProductFormPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import StockPage from "./pages/StockPage";
 import NewSalePage from "./pages/NewSalePage";
+import SalesHistoryPage from "./pages/SalesHistoryPage";
 
 export default function App() {
     return (
@@ -76,7 +77,7 @@ export default function App() {
 
                                 <Route
                                     path="/sales"
-                                    element={<ComingSoonPage />}
+                                    element={<SalesHistoryPage />}
                                 />
 
                                 <Route
