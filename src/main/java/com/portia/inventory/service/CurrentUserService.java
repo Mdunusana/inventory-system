@@ -1,6 +1,8 @@
 package com.portia.inventory.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.portia.inventory.entity.User;
@@ -8,35 +10,29 @@ import com.portia.inventory.repository.UserRepository;
 
 /**
  * Who is performing this action?
- *
- * TEMPORARY: until login exists (Phase 12), every action is
- * attributed to one seeded test user.
- *
- * In Phase 12, only the inside of getCurrentUser() changes.
+ * Returns the user who is logged in for the current request.
  */
 @Service
 public class CurrentUserService {
 
     private final UserRepository userRepository;
-    private final String temporaryUserEmail;
 
-    public CurrentUserService(
-            UserRepository userRepository,
-            @Value("${app.temporary-user-email:admin@example.com}")
-            String temporaryUserEmail) {
-
+    public CurrentUserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.temporaryUserEmail = temporaryUserEmail;
     }
 
     public User getCurrentUser() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getName() == null) {
+            throw new AuthenticationCredentialsNotFoundException(
+                    "You are not logged in");
+        }
 
         return userRepository
-                .findByEmailIgnoreCase(temporaryUserEmail)
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "Temporary user not found: "
-                                        + temporaryUserEmail
-                                        + ". Did you run database/02_sample_data.sql?"));
+                .findByEmailIgnoreCase(authentication.getName())
+                .orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+                        "You are not logged in"));
     }
 }

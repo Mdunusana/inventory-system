@@ -10,20 +10,32 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.portia.inventory.entity.User;
+import com.portia.inventory.repository.UserRepository;
+
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Runs once per request.
+ * If the request has a valid token, it looks the user up in the
+ * database and tells Spring Security who they are and what role they have.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenService;
+    private final UserRepository userRepository;
 
     public JwtAuthenticationFilter(
-            JwtTokenService jwtTokenService) {
+            JwtTokenService jwtTokenService,
+            UserRepository userRepository) {
 
         this.jwtTokenService = jwtTokenService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -33,47 +45,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader =
-                request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null ||
-                !authHeader.startsWith("Bearer ")) {
-
+        // No token: continue as an anonymous visitor
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
+        String email;
 
-        String email =
-                jwtTokenService.extractUsername(token);
+        try {
+            // Checks the signature AND the expiry time
+            email = jwtTokenService.extractUsername(token);
+        } catch (JwtException | IllegalArgumentException ex) {
+            // Bad or expired token: continue as anonymous (results in 401)
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        System.out.println("================================");
-        System.out.println("TOKEN RECEIVED: " + token);
-        System.out.println("EMAIL EXTRACTED: " + email);
-        System.out.println("================================");
+        if (email != null
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-        if (email != null &&
-                SecurityContextHolder.getContext()
-                        .getAuthentication() == null) {
+            // Use the role stored in the DATABASE, and only for active users
+            userRepository.findByEmailIgnoreCase(email)
+                    .filter(User::isActive)
+                    .ifPresent(user -> {
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        user.getEmail(),
+                                        null,
+                                        List.of(new SimpleGrantedAuthority(
+                                                "ROLE_" + user.getRole().name())));
 
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(
-                            email,
-                            null,
-                            List.of(
-                                    new SimpleGrantedAuthority(
-                                            "ROLE_ADMIN")));
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(request));
 
-            authToken.setDetails(
-                    new WebAuthenticationDetailsSource()
-                            .buildDetails(request));
-
-            SecurityContextHolder.getContext()
-                    .setAuthentication(authToken);
+                        SecurityContextHolder.getContext()
+                                .setAuthentication(authToken);
+                    });
         }
 
         filterChain.doFilter(request, response);
     }
 }
-
