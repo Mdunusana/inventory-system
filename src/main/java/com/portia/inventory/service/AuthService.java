@@ -8,6 +8,7 @@ import com.portia.inventory.dto.ChangePasswordRequest;
 import com.portia.inventory.dto.LoginRequest;
 import com.portia.inventory.entity.User;
 import com.portia.inventory.exception.InvalidCredentialsException;
+import com.portia.inventory.exception.InvalidRequestException;
 import com.portia.inventory.repository.UserRepository;
 import com.portia.inventory.security.JwtTokenService;
 
@@ -32,6 +33,12 @@ public class AuthService {
     }
 
     public String authenticate(LoginRequest request) {
+
+        // Missing email or password: treat as a failed login (401),
+        // instead of crashing inside the password check (500)
+        if (request.getEmail() == null || request.getPassword() == null) {
+            throw new InvalidCredentialsException();
+        }
 
         User user = userRepository
                 .findByEmailIgnoreCase(request.getEmail())
@@ -62,7 +69,7 @@ public class AuthService {
                 currentUser.getPasswordHash());
 
         if (!matches) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                     "Current password is incorrect");
         }
 

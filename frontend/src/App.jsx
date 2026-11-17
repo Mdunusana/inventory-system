@@ -8,7 +8,6 @@ import Layout from "./components/Layout";
 
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
-import ComingSoonPage from "./pages/ComingSoonPage";
 import AccessDeniedPage from "./pages/AccessDeniedPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -19,6 +18,8 @@ import StockPage from "./pages/StockPage";
 import NewSalePage from "./pages/NewSalePage";
 import SalesHistoryPage from "./pages/SalesHistoryPage";
 import ReportsPage from "./pages/ReportsPage";
+import UsersPage from "./pages/UsersPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 export default function App() {
     return (
@@ -59,6 +60,11 @@ export default function App() {
                                 element={<NewSalePage />}
                             />
 
+                            <Route
+                                path="/change-password"
+                                element={<ChangePasswordPage />}
+                            />
+
                             <Route element={<RequireAdmin />}>
 
                                 <Route
@@ -88,7 +94,7 @@ export default function App() {
 
                                 <Route
                                     path="/users"
-                                    element={<ComingSoonPage />}
+                                    element={<UsersPage />}
                                 />
 
                             </Route>

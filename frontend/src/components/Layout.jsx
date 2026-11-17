@@ -1,6 +1,11 @@
 import { Link, Outlet } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
 
+const ROLE_LABELS = {
+    ADMIN: "Administrator",
+    SALES_INVENTORY: "Sales / Inventory"
+};
+
 export default function Layout() {
     const { user, logout } = useAuth();
 
@@ -37,21 +42,25 @@ export default function Layout() {
                     )}
                 </nav>
 
-                <div style={{ marginTop: "1rem" }}>
+                <div
+                    style={{
+                        marginTop: "1rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "1rem"
+                    }}
+                >
                     {user && (
                         <>
-                            <strong>
-                                {user.name} {user.surname}
-                            </strong>
-                            {" | "}
-                            {user.role}
-                            {" | "}
-                            <button
-                                onClick={logout}
-                                style={{ marginLeft: "1rem" }}
-                            >
-                                Logout
-                            </button>
+                            <span>
+                                <strong>{user.email}</strong>
+                                {" | "}
+                                {ROLE_LABELS[user.role] ?? user.role}
+                            </span>
+
+                            <Link to="/change-password">Change Password</Link>
+
+                            <button onClick={logout}>Logout</button>
                         </>
                     )}
                 </div>
