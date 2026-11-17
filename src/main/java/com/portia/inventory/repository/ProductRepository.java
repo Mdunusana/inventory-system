@@ -1,5 +1,6 @@
 package com.portia.inventory.repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -94,4 +95,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(
             "SELECT COALESCE(SUM(p.currentStock), 0L) FROM Product p WHERE p.active = true")
     long sumActiveUnitsInStock();
+
+    /**
+     * What all active stock is worth right now: price x current stock.
+     * Returns null when there are no active products (DashboardService
+     * turns that into 0).
+     */
+    @Query("SELECT SUM(p.price * p.currentStock) FROM Product p WHERE p.active = true")
+    BigDecimal sumActiveInventoryValue();
 }
