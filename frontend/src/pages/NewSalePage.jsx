@@ -1,24 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { get, post } from "../api/client";
+import Icon from "../components/Icon";
 import StatusBadge from "../components/StatusBadge";
-
-const cellStyle = {
-    padding: "0.5rem",
-    borderBottom: "1px solid #ddd",
-    textAlign: "left"
-};
-
-const inputStyle = {
-    padding: "0.5rem",
-    boxSizing: "border-box"
-};
-
-const panelStyle = {
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    padding: "1rem",
-    marginBottom: "1.5rem"
-};
 
 function money(value) {
     return `R ${Number(value).toFixed(2)}`;
@@ -119,6 +102,7 @@ export default function NewSalePage() {
         (sum, line) => sum + line.price * line.quantity,
         0
     );
+    const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0);
 
     async function completeSale() {
         if (cart.length === 0) {
@@ -158,60 +142,68 @@ export default function NewSalePage() {
         );
 
         return (
-            <div>
-                <h1>Sale Complete ✔</h1>
+            <div className="receipt">
+                <div className="card">
+                    <div className="receipt-head">
+                        <div className="success-circle">✓</div>
+                        <h1>Sale complete</h1>
+                        <p className="muted">
+                            Sale #{receipt.saleId} ·{" "}
+                            {new Date(receipt.saleDate).toLocaleString()} · sold by{" "}
+                            {receipt.soldBy}
+                        </p>
+                    </div>
 
-                <div style={panelStyle}>
-                    <p>
-                        <strong>Sale #</strong>
-                        {receipt.saleId}
-                        <br />
-                        <strong>Date: </strong>
-                        {new Date(receipt.saleDate).toLocaleString()}
-                        <br />
-                        <strong>Sold by: </strong>
-                        {receipt.soldBy}
-                    </p>
-
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                            <tr>
-                                <th style={cellStyle}>Product</th>
-                                <th style={cellStyle}>Qty</th>
-                                <th style={cellStyle}>Unit Price</th>
-                                <th style={cellStyle}>Subtotal</th>
-                                <th style={cellStyle}>Stock Left</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {receipt.items.map((item) => (
-                                <tr key={item.productId}>
-                                    <td style={cellStyle}>
-                                        {item.productCode} - {item.productName}
-                                    </td>
-                                    <td style={cellStyle}>{item.quantity}</td>
-                                    <td style={cellStyle}>{money(item.unitPrice)}</td>
-                                    <td style={cellStyle}>{money(item.subtotal)}</td>
-                                    <td style={cellStyle}>
-                                        {item.currentStock}{" "}
-                                        <StatusBadge status={item.stockStatus} />
-                                    </td>
+                    <div className="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th className="cell-number">Qty</th>
+                                    <th className="cell-number">Unit price</th>
+                                    <th className="cell-number">Subtotal</th>
+                                    <th>Stock left</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {receipt.items.map((item) => (
+                                    <tr key={item.productId}>
+                                        <td>
+                                            <div className="list-title">{item.productName}</div>
+                                            <div className="list-meta">{item.productCode}</div>
+                                        </td>
+                                        <td className="cell-number">{item.quantity}</td>
+                                        <td className="cell-number">{money(item.unitPrice)}</td>
+                                        <td className="cell-number">{money(item.subtotal)}</td>
+                                        <td>
+                                            <div className="badge-line">
+                                                {item.currentStock}
+                                                <StatusBadge status={item.stockStatus} />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <h2>Total: {money(receipt.totalAmount)}</h2>
+                    <div className="summary-row total-row">
+                        <span>Total</span>
+                        <span>{money(receipt.totalAmount)}</span>
+                    </div>
+
+                    {warnings.length > 0 && (
+                        <div className="warning-message">
+                            Reorder soon:{" "}
+                            {warnings.map((item) => item.productName).join(", ")}
+                        </div>
+                    )}
+
+                    <button className="btn-block" onClick={() => setReceipt(null)}>
+                        <Icon name="plus" size={16} />
+                        Start new sale
+                    </button>
                 </div>
-
-                {warnings.length > 0 && (
-                    <p style={{ color: "#fd7e14", fontWeight: "bold" }}>
-                        ⚠ Reorder soon:{" "}
-                        {warnings.map((item) => item.productName).join(", ")}
-                    </p>
-                )}
-
-                <button onClick={() => setReceipt(null)}>Start New Sale</button>
             </div>
         );
     }
@@ -219,83 +211,124 @@ export default function NewSalePage() {
     // ---------- Building a sale ----------
     return (
         <div>
-            <h1>New Sale</h1>
+            <div className="page-header">
+                <div>
+                    <h1>New Sale</h1>
+                    <p className="page-subtitle">
+                        Add products to the cart, then complete the sale.
+                    </p>
+                </div>
+            </div>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
-            <form
-                onSubmit={handleAdd}
-                style={{ ...panelStyle, display: "flex", gap: "1rem" }}
-                noValidate
-            >
-                <select
-                    value={productId}
-                    onChange={(e) => setProductId(e.target.value)}
-                    style={{ ...inputStyle, flex: 3 }}
-                >
-                    <option value="">-- Choose a product --</option>
-                    {sellable.map((product) => (
-                        <option key={product.productId} value={product.productId}>
-                            {product.productCode} - {product.productName} (
-                            {money(product.price)}, {product.currentStock} in stock)
-                        </option>
-                    ))}
-                </select>
-
-                <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    style={{ ...inputStyle, flex: 1 }}
-                />
-
-                <button type="submit">Add</button>
-            </form>
-
-            {cart.length === 0 ? (
-                <p>No items yet. Choose a product and click Add.</p>
-            ) : (
-                <>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                            <tr>
-                                <th style={cellStyle}>Product</th>
-                                <th style={cellStyle}>Unit Price</th>
-                                <th style={cellStyle}>Qty</th>
-                                <th style={cellStyle}>Subtotal</th>
-                                <th style={cellStyle}></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {cart.map((line) => (
-                                <tr key={line.productId}>
-                                    <td style={cellStyle}>
-                                        {line.productCode} - {line.productName}
-                                    </td>
-                                    <td style={cellStyle}>{money(line.price)}</td>
-                                    <td style={cellStyle}>{line.quantity}</td>
-                                    <td style={cellStyle}>
-                                        {money(line.price * line.quantity)}
-                                    </td>
-                                    <td style={cellStyle}>
-                                        <button onClick={() => removeLine(line.productId)}>
-                                            Remove
-                                        </button>
-                                    </td>
-                                </tr>
+            <div className="sale-layout">
+                <div>
+                    <form onSubmit={handleAdd} className="card add-bar" noValidate>
+                        <select
+                            value={productId}
+                            onChange={(e) => setProductId(e.target.value)}
+                        >
+                            <option value="">Choose a product</option>
+                            {sellable.map((product) => (
+                                <option key={product.productId} value={product.productId}>
+                                    {product.productCode} - {product.productName} (
+                                    {money(product.price)}, {product.currentStock} in stock)
+                                </option>
                             ))}
-                        </tbody>
-                    </table>
+                        </select>
 
-                    <h2>Total: {money(previewTotal)}</h2>
+                        <input
+                            className="qty-input"
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                        />
 
-                    <button onClick={completeSale} disabled={saving}>
+                        <button type="submit">
+                            <Icon name="plus" size={16} />
+                            Add
+                        </button>
+                    </form>
+
+                    {cart.length === 0 ? (
+                        <div className="card empty-state">
+                            <Icon name="sale" size={28} />
+                            <p>The cart is empty. Choose a product and click Add.</p>
+                        </div>
+                    ) : (
+                        <div className="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th className="cell-number">Unit price</th>
+                                        <th className="cell-number">Qty</th>
+                                        <th className="cell-number">Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {cart.map((line) => (
+                                        <tr key={line.productId}>
+                                            <td>
+                                                <div className="list-title">{line.productName}</div>
+                                                <div className="list-meta">{line.productCode}</div>
+                                            </td>
+                                            <td className="cell-number">{money(line.price)}</td>
+                                            <td className="cell-number">{line.quantity}</td>
+                                            <td className="cell-number">
+                                                {money(line.price * line.quantity)}
+                                            </td>
+                                            <td>
+                                                <div className="cell-actions">
+                                                    <button
+                                                        className="btn-danger btn-sm"
+                                                        onClick={() => removeLine(line.productId)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                <div className="card summary">
+                    <h2>Order summary</h2>
+
+                    <div className="summary-row">
+                        <span className="muted">Items</span>
+                        <span>{itemCount}</span>
+                    </div>
+                    <div className="summary-row">
+                        <span className="muted">Products</span>
+                        <span>{cart.length}</span>
+                    </div>
+                    <div className="summary-row total-row">
+                        <span>Total</span>
+                        <span>{money(previewTotal)}</span>
+                    </div>
+
+                    <button
+                        className="btn-block"
+                        onClick={completeSale}
+                        disabled={saving || cart.length === 0}
+                    >
                         {saving ? "Processing..." : "Complete Sale"}
                     </button>
-                </>
-            )}
+
+                    <p className="muted summary-note">
+                        Stock is checked again by the server when you complete the sale.
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
