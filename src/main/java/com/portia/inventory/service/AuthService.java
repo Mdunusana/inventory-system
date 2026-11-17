@@ -1,0 +1,81 @@
+package com.portia.inventory.service;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.portia.inventory.dto.ChangePasswordRequest;
+import com.portia.inventory.dto.LoginRequest;
+import com.portia.inventory.entity.User;
+import com.portia.inventory.exception.InvalidCredentialsException;
+import com.portia.inventory.exception.InvalidRequestException;
+import com.portia.inventory.repository.UserRepository;
+import com.portia.inventory.security.JwtTokenService;
+
+@Service
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenService jwtTokenService;
+    private final CurrentUserService currentUserService;
+
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtTokenService jwtTokenService,
+            CurrentUserService currentUserService) {
+
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenService = jwtTokenService;
+        this.currentUserService = currentUserService;
+    }
+
+    public String authenticate(LoginRequest request) {
+
+        // Missing email or password: treat as a failed login (401),
+        // instead of crashing inside the password check (500)
+        if (request.getEmail() == null || request.getPassword() == null) {
+            throw new InvalidCredentialsException();
+        }
+
+        User user = userRepository
+                .findByEmailIgnoreCase(request.getEmail())
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (!user.isActive()) {
+            throw new InvalidCredentialsException();
+        }
+
+        boolean matches = passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash());
+
+        if (!matches) {
+            throw new InvalidCredentialsException();
+        }
+
+        return jwtTokenService.generateToken(user);
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) {
+
+        User currentUser = currentUserService.getCurrentUser();
+
+        boolean matches = passwordEncoder.matches(
+                request.currentPassword(),
+                currentUser.getPasswordHash());
+
+        if (!matches) {
+            throw new InvalidRequestException(
+                    "Current password is incorrect");
+        }
+
+        currentUser.setPasswordHash(
+                passwordEncoder.encode(request.newPassword()));
+
+        userRepository.save(currentUser);
+    }
+}
