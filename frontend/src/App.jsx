@@ -16,6 +16,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductFormPage from "./pages/ProductFormPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import StockPage from "./pages/StockPage";
+import NewSalePage from "./pages/NewSalePage";
 
 export default function App() {
     return (
@@ -53,7 +54,7 @@ export default function App() {
 
                             <Route
                                 path="/sales/new"
-                                element={<ComingSoonPage />}
+                                element={<NewSalePage />}
                             />
 
                             <Route element={<RequireAdmin />}>
