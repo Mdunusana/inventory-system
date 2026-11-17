@@ -1,5 +1,8 @@
 export default function StatusBadge({ status }) {
     const colors = {
+        OK: "#198754",
+        LOW_STOCK: "#fd7e14",
+        OUT_OF_STOCK: "#dc3545",
         LOW: "#dc3545",
         MEDIUM: "#ffc107",
         HIGH: "#198754",
