@@ -3,16 +3,11 @@ import { Link } from "react-router-dom";
 import { get, patch } from "../api/client";
 import { useAuth } from "../auth/authContext";
 import { useCategories } from "../hooks/useCategories";
+import Icon from "../components/Icon";
 import Pagination from "../components/Pagination";
 import StatusBadge from "../components/StatusBadge";
 
 const PAGE_SIZE = 10;
-
-const cellStyle = {
-    padding: "0.5rem",
-    borderBottom: "1px solid #ddd",
-    textAlign: "left"
-};
 
 export default function ProductsPage() {
     const { user } = useAuth();
@@ -86,30 +81,25 @@ export default function ProductsPage() {
 
     return (
         <div>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                }}
-            >
-                <h1>Products</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Products</h1>
+                    <p className="page-subtitle">
+                        Everything you sell, with live stock levels.
+                    </p>
+                </div>
 
                 {isAdmin && (
-                    <Link to="/products/new">
-                        <button>+ New Product</button>
+                    <Link to="/products/new" className="btn">
+                        <Icon name="plus" size={16} />
+                        New Product
                     </Link>
                 )}
             </div>
 
-            <div
-                style={{
-                    display: "flex",
-                    gap: "1rem",
-                    marginBottom: "1rem"
-                }}
-            >
+            <div className="toolbar">
                 <input
+                    className="search"
                     type="text"
                     placeholder="Search by name or code"
                     value={search}
@@ -117,7 +107,6 @@ export default function ProductsPage() {
                         setSearch(event.target.value);
                         setPage(0);
                     }}
-                    style={{ padding: "0.5rem", flex: 1 }}
                 />
 
                 <select
@@ -126,86 +115,88 @@ export default function ProductsPage() {
                         setCategoryId(event.target.value);
                         setPage(0);
                     }}
-                    style={{ padding: "0.5rem" }}
                 >
                     <option value="">All categories</option>
                     {categories.map((category) => (
-                        <option
-                            key={category.categoryId}
-                            value={category.categoryId}
-                        >
+                        <option key={category.categoryId} value={category.categoryId}>
                             {category.categoryName}
                         </option>
                     ))}
                 </select>
             </div>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
             {loading ? (
-                <p>Loading products...</p>
+                <p className="muted">Loading products...</p>
             ) : products.length === 0 ? (
-                <p>No products found.</p>
+                <div className="card empty-state">No products found.</div>
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Code</th>
-                            <th style={cellStyle}>Name</th>
-                            <th style={cellStyle}>Category</th>
-                            <th style={cellStyle}>Price</th>
-                            <th style={cellStyle}>Stock</th>
-                            <th style={cellStyle}>Status</th>
-                            <th style={cellStyle}>Active</th>
-                            {isAdmin && <th style={cellStyle}>Actions</th>}
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {products.map((product) => (
-                            <tr
-                                key={product.productId}
-                                style={{
-                                    opacity: product.active ? 1 : 0.5
-                                }}
-                            >
-                                <td style={cellStyle}>{product.productCode}</td>
-                                <td style={cellStyle}>{product.productName}</td>
-                                <td style={cellStyle}>{product.categoryName}</td>
-                                <td style={cellStyle}>
-                                    R {Number(product.price).toFixed(2)}
-                                </td>
-                                <td style={cellStyle}>{product.currentStock}</td>
-                                <td style={cellStyle}>
-                                    <StatusBadge status={product.stockStatus} />
-                                </td>
-                                <td style={cellStyle}>
-                                    {product.active ? "Yes" : "No"}
-                                </td>
-
-                                {isAdmin && (
-                                    <td style={cellStyle}>
-                                        <Link
-                                            to={`/products/${product.productId}/edit`}
-                                        >
-                                            <button>Edit</button>
-                                        </Link>
-
-                                        <button
-                                            onClick={() => toggleActive(product)}
-                                            disabled={busyId === product.productId}
-                                            style={{ marginLeft: "0.5rem" }}
-                                        >
-                                            {product.active
-                                                ? "Deactivate"
-                                                : "Activate"}
-                                        </button>
-                                    </td>
-                                )}
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th className="cell-number">Price</th>
+                                <th className="cell-number">Stock</th>
+                                <th>Status</th>
+                                {isAdmin && <th></th>}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            {products.map((product) => (
+                                <tr
+                                    key={product.productId}
+                                    className={product.active ? "" : "row-inactive"}
+                                >
+                                    <td className="cell-code">{product.productCode}</td>
+                                    <td>
+                                        <div className="list-title">{product.productName}</div>
+                                    </td>
+                                    <td>{product.categoryName}</td>
+                                    <td className="cell-number">
+                                        R {Number(product.price).toFixed(2)}
+                                    </td>
+                                    <td className="cell-number">{product.currentStock}</td>
+                                    <td>
+                                        {product.active ? (
+                                            <StatusBadge status={product.stockStatus} />
+                                        ) : (
+                                            <StatusBadge status="INACTIVE" />
+                                        )}
+                                    </td>
+
+                                    {isAdmin && (
+                                        <td>
+                                            <div className="cell-actions">
+                                                <Link
+                                                    to={`/products/${product.productId}/edit`}
+                                                    className="btn btn-secondary btn-sm"
+                                                >
+                                                    Edit
+                                                </Link>
+                                                <button
+                                                    className={`btn-sm ${
+                                                        product.active
+                                                            ? "btn-danger"
+                                                            : "btn-secondary"
+                                                    }`}
+                                                    onClick={() => toggleActive(product)}
+                                                    disabled={busyId === product.productId}
+                                                >
+                                                    {product.active ? "Deactivate" : "Activate"}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {totalPages > 1 && (

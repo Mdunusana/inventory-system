@@ -1,31 +1,17 @@
+// Turns a status code from the backend into a soft coloured pill.
+const STYLES = {
+    OK: { tone: "success", label: "In stock" },
+    LOW_STOCK: { tone: "warning", label: "Low stock" },
+    OUT_OF_STOCK: { tone: "danger", label: "Out of stock" },
+    LOW: { tone: "danger", label: "Low" },
+    MEDIUM: { tone: "warning", label: "Medium" },
+    HIGH: { tone: "success", label: "High" },
+    ACTIVE: { tone: "success", label: "Active" },
+    INACTIVE: { tone: "neutral", label: "Inactive" }
+};
+
 export default function StatusBadge({ status }) {
-    const colors = {
-        OK: "#198754",
-        LOW_STOCK: "#fd7e14",
-        OUT_OF_STOCK: "#dc3545",
-        LOW: "#dc3545",
-        MEDIUM: "#ffc107",
-        HIGH: "#198754",
-        ACTIVE: "#198754",
-        INACTIVE: "#6c757d"
-    };
+    const style = STYLES[status] || { tone: "neutral", label: status };
 
-    const backgroundColor =
-        colors[status] || "#0d6efd";
-
-    return (
-        <span
-            style={{
-                display: "inline-block",
-                padding: "0.25rem 0.5rem",
-                borderRadius: "0.5rem",
-                color: "#fff",
-                backgroundColor,
-                fontSize: "0.85rem",
-                fontWeight: "bold"
-            }}
-        >
-            {status}
-        </span>
-    );
+    return <span className={`badge badge-${style.tone}`}>{style.label}</span>;
 }

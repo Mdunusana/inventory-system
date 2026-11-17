@@ -557,3 +557,106 @@ a.btn.btn-secondary:hover {
     padding: 1.25rem 0;
     text-align: center;
 }
+/* ---------- Tables (cells, wrapper, actions) ---------- */
+
+th,
+td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.table-wrap table {
+    border: none;
+    box-shadow: none;
+}
+
+.row-inactive td {
+    color: var(--muted);
+    background: #fafafa;
+}
+
+.cell-code {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.cell-number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.cell-actions {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: flex-end;
+}
+
+/* ---------- Search and filter bar ---------- */
+
+.toolbar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.toolbar .search {
+    flex: 1;
+    min-width: 220px;
+}
+
+.toolbar select {
+    width: auto;
+    min-width: 180px;
+}
+
+/* ---------- Status badges ---------- */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.badge-success { background: var(--success-soft); color: var(--success); }
+.badge-warning { background: var(--warning-soft); color: var(--warning); }
+.badge-danger  { background: var(--danger-soft);  color: var(--danger); }
+.badge-neutral { background: #f3f4f6;             color: var(--muted); }
+
+/* ---------- Pagination ---------- */
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
