@@ -16,8 +16,10 @@ import com.portia.inventory.dto.SaleItemRequest;
 import com.portia.inventory.dto.SaleRequest;
 import com.portia.inventory.dto.SaleResponse;
 import com.portia.inventory.dto.SaleSummaryResponse;
+import com.portia.inventory.entity.MovementType;
 import com.portia.inventory.entity.Product;
 import com.portia.inventory.entity.Sale;
+import com.portia.inventory.entity.StockMovement;
 import com.portia.inventory.entity.User;
 import com.portia.inventory.exception.ConflictException;
 import com.portia.inventory.exception.InsufficientStockException;
@@ -25,6 +27,7 @@ import com.portia.inventory.exception.InvalidRequestException;
 import com.portia.inventory.exception.ResourceNotFoundException;
 import com.portia.inventory.repository.ProductRepository;
 import com.portia.inventory.repository.SaleRepository;
+import com.portia.inventory.repository.StockMovementRepository;
 
 @Service
 public class SaleService {
@@ -33,15 +36,18 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
+    private final StockMovementRepository stockMovementRepository;
     private final CurrentUserService currentUserService;
 
     public SaleService(
             SaleRepository saleRepository,
             ProductRepository productRepository,
+            StockMovementRepository stockMovementRepository,
             CurrentUserService currentUserService) {
 
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
+        this.stockMovementRepository = stockMovementRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -53,6 +59,8 @@ public class SaleService {
                     "A sale must contain at least one item");
         }
 
+        // Combine duplicate lines. TreeMap keeps product IDs in order,
+        // so products are always locked in the same order (no deadlocks).
         Map<Long, Integer> quantities = new TreeMap<>();
 
         for (SaleItemRequest item : request.items()) {
@@ -68,8 +76,10 @@ public class SaleService {
 
         for (Map.Entry<Long, Integer> line : quantities.entrySet()) {
 
+            // LOCK the product row until this sale finishes,
+            // so two sales can never sell the same last item.
             Product product = productRepository
-                    .findById(line.getKey())
+                    .findByIdForUpdate(line.getKey())
                     .orElseThrow(() ->
                             new ResourceNotFoundException(
                                     "Product not found: "
@@ -85,7 +95,10 @@ public class SaleService {
             if (product.getCurrentStock() < line.getValue()) {
                 throw new InsufficientStockException(
                         "Insufficient stock for "
-                                + product.getProductCode());
+                                + product.getProductCode()
+                                + " (only "
+                                + product.getCurrentStock()
+                                + " left)");
             }
 
             products.put(line.getKey(), product);
@@ -105,6 +118,21 @@ public class SaleService {
         }
 
         Sale savedSale = saleRepository.save(sale);
+
+        // Log one SALE movement per product (the audit trail).
+        // Needs the saved sale's ID, so this happens after save().
+        for (Map.Entry<Long, Integer> line : quantities.entrySet()) {
+
+            stockMovementRepository.save(
+                    new StockMovement(
+                            products.get(line.getKey()),
+                            user,
+                            savedSale.getSaleId(),
+                            MovementType.SALE,
+                            -line.getValue(),
+                            null,
+                            null));
+        }
 
         return SaleResponse.from(savedSale);
     }
