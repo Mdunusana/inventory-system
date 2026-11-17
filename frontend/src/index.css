@@ -967,3 +967,60 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+/* ---------- Users ---------- */
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.you-tag {
+    margin-left: 0.5rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.badge-primary { background: var(--primary-soft); color: var(--primary); }
+
+.narrow-page {
+    max-width: 520px;
+}
+
+/* ---------- Error pages (403 / 404) ---------- */
+
+.error-card {
+    text-align: center;
+}
+
+.error-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    margin-bottom: 0.75rem;
+}
+
+.error-code {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.error-card h1 {
+    margin: 0.4rem 0 0.5rem;
+}
+
+.error-card p {
+    margin-bottom: 1.5rem;
+}
+
+a.btn.btn-block {
+    display: flex;
+}

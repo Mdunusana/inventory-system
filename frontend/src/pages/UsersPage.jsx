@@ -2,30 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { get, patch, post } from "../api/client";
 import { useAuth } from "../auth/authContext";
 import FormField from "../components/FormField";
+import Icon from "../components/Icon";
 import Pagination from "../components/Pagination";
 import StatusBadge from "../components/StatusBadge";
 
 const PAGE_SIZE = 20;
-
-const cellStyle = {
-    padding: "0.5rem",
-    borderBottom: "1px solid #ddd",
-    textAlign: "left"
-};
-
-const inputStyle = {
-    width: "100%",
-    padding: "0.5rem",
-    boxSizing: "border-box"
-};
-
-const panelStyle = {
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    padding: "1rem",
-    marginBottom: "2rem",
-    maxWidth: "600px"
-};
 
 const emptyForm = {
     name: "",
@@ -94,6 +75,12 @@ export default function UsersPage() {
         return found;
     }
 
+    function closeForm() {
+        setShowForm(false);
+        setForm(emptyForm);
+        setErrors({});
+    }
+
     async function handleCreate(event) {
         event.preventDefault();
         setMessage("");
@@ -120,8 +107,7 @@ export default function UsersPage() {
                 `User ${created.name} ${created.surname} created. ` +
                     "Give them their first password; they can change it after logging in."
             );
-            setForm(emptyForm);
-            setShowForm(false);
+            closeForm();
             await loadUsers();
         } catch (err) {
             setError(err.message);
@@ -157,125 +143,147 @@ export default function UsersPage() {
 
     return (
         <div>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                }}
-            >
-                <h1>Users</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Users</h1>
+                    <p className="page-subtitle">
+                        Who can log in, and what they are allowed to do.
+                    </p>
+                </div>
                 {!showForm && (
-                    <button onClick={() => setShowForm(true)}>+ Add User</button>
+                    <button onClick={() => setShowForm(true)}>
+                        <Icon name="plus" size={16} />
+                        Add User
+                    </button>
                 )}
             </div>
 
-            {message && (
-                <p style={{ color: "green", fontWeight: "bold" }}>{message}</p>
-            )}
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {message && <div className="success-message">{message}</div>}
+            {error && <div className="error-message">{error}</div>}
 
             {showForm && (
-                <form onSubmit={handleCreate} style={panelStyle} noValidate>
-                    <h3>New User</h3>
+                <form onSubmit={handleCreate} className="card section form-page" noValidate>
+                    <h2>New user</h2>
 
-                    <FormField label="Name" error={errors.name}>
-                        <input name="name" value={form.name} onChange={handleChange}
-                            maxLength={100} style={inputStyle} />
-                    </FormField>
+                    <div className="form-grid">
+                        <FormField label="Name" error={errors.name}>
+                            <input name="name" value={form.name} onChange={handleChange}
+                                maxLength={100} />
+                        </FormField>
 
-                    <FormField label="Surname" error={errors.surname}>
-                        <input name="surname" value={form.surname} onChange={handleChange}
-                            maxLength={100} style={inputStyle} />
-                    </FormField>
+                        <FormField label="Surname" error={errors.surname}>
+                            <input name="surname" value={form.surname} onChange={handleChange}
+                                maxLength={100} />
+                        </FormField>
+                    </div>
 
                     <FormField label="Email" error={errors.email}>
                         <input name="email" type="email" value={form.email}
-                            onChange={handleChange} maxLength={255} style={inputStyle} />
+                            onChange={handleChange} maxLength={255} />
                     </FormField>
 
-                    <FormField label="First password (8-72 characters)" error={errors.password}>
-                        <input name="password" type="password" value={form.password}
-                            onChange={handleChange} maxLength={72} style={inputStyle}
-                            autoComplete="new-password" />
-                    </FormField>
+                    <div className="form-grid">
+                        <FormField label="First password (8-72 characters)" error={errors.password}>
+                            <input name="password" type="password" value={form.password}
+                                onChange={handleChange} maxLength={72}
+                                autoComplete="new-password" />
+                        </FormField>
 
-                    <FormField label="Role">
-                        <select name="role" value={form.role} onChange={handleChange}
-                            style={inputStyle}>
-                            <option value="SALES_INVENTORY">Sales / Inventory</option>
-                            <option value="ADMIN">Administrator</option>
-                        </select>
-                    </FormField>
+                        <FormField label="Role">
+                            <select name="role" value={form.role} onChange={handleChange}>
+                                <option value="SALES_INVENTORY">Sales / Inventory</option>
+                                <option value="ADMIN">Administrator</option>
+                            </select>
+                        </FormField>
+                    </div>
 
-                    <button type="submit" disabled={saving}>
-                        {saving ? "Saving..." : "Create User"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setShowForm(false);
-                            setForm(emptyForm);
-                            setErrors({});
-                        }}
-                        style={{ marginLeft: "1rem" }}
-                    >
-                        Cancel
-                    </button>
+                    <div className="form-actions">
+                        <button type="button" className="btn-secondary" onClick={closeForm}>
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={saving}>
+                            {saving ? "Saving..." : "Create user"}
+                        </button>
+                    </div>
                 </form>
             )}
 
             {loading ? (
-                <p>Loading users...</p>
+                <p className="muted">Loading users...</p>
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Name</th>
-                            <th style={cellStyle}>Email</th>
-                            <th style={cellStyle}>Role</th>
-                            <th style={cellStyle}>Status</th>
-                            <th style={cellStyle}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map((user) => {
-                            const isMe =
-                                user.email.toLowerCase() === me?.email?.toLowerCase();
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {users.map((user) => {
+                                const isMe =
+                                    user.email.toLowerCase() === me?.email?.toLowerCase();
 
-                            return (
-                                <tr
-                                    key={user.userId}
-                                    style={{ opacity: user.active ? 1 : 0.5 }}
-                                >
-                                    <td style={cellStyle}>
-                                        {user.name} {user.surname}
-                                        {isMe && " (you)"}
-                                    </td>
-                                    <td style={cellStyle}>{user.email}</td>
-                                    <td style={cellStyle}>
-                                        {ROLE_LABELS[user.role] ?? user.role}
-                                    </td>
-                                    <td style={cellStyle}>
-                                        <StatusBadge
-                                            status={user.active ? "ACTIVE" : "INACTIVE"}
-                                        />
-                                    </td>
-                                    <td style={cellStyle}>
-                                        {!isMe && (
-                                            <button
-                                                onClick={() => toggleActive(user)}
-                                                disabled={busyId === user.userId}
+                                return (
+                                    <tr
+                                        key={user.userId}
+                                        className={user.active ? "" : "row-inactive"}
+                                    >
+                                        <td>
+                                            <div className="user-cell">
+                                                <div className="avatar">
+                                                    {user.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="list-title">
+                                                        {user.name} {user.surname}
+                                                        {isMe && <span className="you-tag">You</span>}
+                                                    </div>
+                                                    <div className="list-meta">{user.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span
+                                                className={`badge ${
+                                                    user.role === "ADMIN"
+                                                        ? "badge-primary"
+                                                        : "badge-neutral"
+                                                }`}
                                             >
-                                                {user.active ? "Deactivate" : "Activate"}
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                                {ROLE_LABELS[user.role] ?? user.role}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <StatusBadge
+                                                status={user.active ? "ACTIVE" : "INACTIVE"}
+                                            />
+                                        </td>
+                                        <td>
+                                            <div className="cell-actions">
+                                                {!isMe && (
+                                                    <button
+                                                        className={`btn-sm ${
+                                                            user.active
+                                                                ? "btn-danger"
+                                                                : "btn-secondary"
+                                                        }`}
+                                                        onClick={() => toggleActive(user)}
+                                                        disabled={busyId === user.userId}
+                                                    >
+                                                        {user.active ? "Deactivate" : "Activate"}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {totalPages > 1 && (

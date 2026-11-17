@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { post } from "../api/client";
 import FormField from "../components/FormField";
-
-const inputStyle = {
-    width: "100%",
-    padding: "0.5rem",
-    boxSizing: "border-box"
-};
+import Icon from "../components/Icon";
 
 const emptyForm = {
     currentPassword: "",
@@ -73,15 +68,30 @@ export default function ChangePasswordPage() {
     }
 
     return (
-        <div style={{ maxWidth: "500px" }}>
-            <h1>Change Password</h1>
+        <div className="narrow-page">
+            <div className="page-header">
+                <div>
+                    <h1>Change Password</h1>
+                    <p className="page-subtitle">
+                        Use at least 8 characters. Don't reuse your old password.
+                    </p>
+                </div>
+            </div>
 
-            {message && (
-                <p style={{ color: "green", fontWeight: "bold" }}>{message}</p>
-            )}
-            {serverError && <p style={{ color: "red" }}>{serverError}</p>}
+            {message && <div className="success-message">{message}</div>}
+            {serverError && <div className="error-message">{serverError}</div>}
 
-            <form onSubmit={handleSubmit} noValidate>
+            <form className="card" onSubmit={handleSubmit} noValidate>
+                <div className="form-title">
+                    <div className="stat-icon tone-primary">
+                        <Icon name="lock" size={18} />
+                    </div>
+                    <div>
+                        <h2>Your password</h2>
+                        <p className="muted">You stay logged in after changing it.</p>
+                    </div>
+                </div>
+
                 <FormField label="Current password" error={errors.currentPassword}>
                     <input
                         type="password"
@@ -89,7 +99,6 @@ export default function ChangePasswordPage() {
                         value={form.currentPassword}
                         onChange={handleChange}
                         autoComplete="current-password"
-                        style={inputStyle}
                     />
                 </FormField>
 
@@ -101,7 +110,6 @@ export default function ChangePasswordPage() {
                         onChange={handleChange}
                         maxLength={72}
                         autoComplete="new-password"
-                        style={inputStyle}
                     />
                 </FormField>
 
@@ -113,12 +121,11 @@ export default function ChangePasswordPage() {
                         onChange={handleChange}
                         maxLength={72}
                         autoComplete="new-password"
-                        style={inputStyle}
                     />
                 </FormField>
 
-                <button type="submit" disabled={saving}>
-                    {saving ? "Saving..." : "Change Password"}
+                <button type="submit" className="btn-block" disabled={saving}>
+                    {saving ? "Saving..." : "Change password"}
                 </button>
             </form>
         </div>
