@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +19,9 @@ import com.portia.inventory.entity.StockMovement;
  * Read-only queries for reports.
  * It extends the bare Repository marker (not JpaRepository)
  * on purpose: it offers NO save or delete.
+ *
+ * Note: @EntityGraph is NOT used here, because Spring would build it
+ * for SaleItem (this repository's type). JOIN FETCH is used instead.
  */
 public interface ReportRepository extends Repository<SaleItem, Long> {
 
@@ -80,10 +82,10 @@ public interface ReportRepository extends Repository<SaleItem, Long> {
     List<SalesTotalProjection> findSalesTotals(
             @Param("since") LocalDateTime since);
 
-    @EntityGraph(attributePaths = "category")
     @Query("""
             SELECT p
             FROM Product p
+            JOIN FETCH p.category
             WHERE p.active = true
               AND p.currentStock > 0
               AND p.createdDate < :createdBefore
@@ -91,11 +93,12 @@ public interface ReportRepository extends Repository<SaleItem, Long> {
     List<Product> findSlowMovingCandidates(
             @Param("createdBefore") LocalDateTime createdBefore);
 
-    @EntityGraph(attributePaths = {"product", "user"})
     @Query(
             value = """
                     SELECT m
                     FROM StockMovement m
+                    JOIN FETCH m.product
+                    JOIN FETCH m.user
                     WHERE (:fromTime IS NULL OR m.movementDate >= :fromTime)
                       AND (:toTime IS NULL OR m.movementDate < :toTime)
                       AND (:productId IS NULL OR m.product.productId = :productId)

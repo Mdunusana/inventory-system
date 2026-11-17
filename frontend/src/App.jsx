@@ -18,6 +18,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import StockPage from "./pages/StockPage";
 import NewSalePage from "./pages/NewSalePage";
 import SalesHistoryPage from "./pages/SalesHistoryPage";
+import ReportsPage from "./pages/ReportsPage";
 
 export default function App() {
     return (
@@ -82,7 +83,7 @@ export default function App() {
 
                                 <Route
                                     path="/reports"
-                                    element={<ComingSoonPage />}
+                                    element={<ReportsPage />}
                                 />
 
                                 <Route
