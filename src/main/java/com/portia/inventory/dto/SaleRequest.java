@@ -14,8 +14,7 @@ public record SaleRequest(
 
         @NotEmpty(message = "A sale must contain at least one item")
         @Size(max = 200, message = "A sale can contain at most 200 lines")
-        @Valid
-        List<SaleItemRequest> items
+        List<@Valid SaleItemRequest> items
 
 ) {
 }
