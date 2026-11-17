@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -92,22 +93,38 @@ public class GlobalExceptionHandler {
                 .body(apiError);
     }
 
-@ExceptionHandler(InvalidCredentialsException.class)
-public ResponseEntity<ApiError> handleInvalidCredentials(
-        InvalidCredentialsException ex,
-        HttpServletRequest request) {
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(
+            InvalidCredentialsException ex,
+            HttpServletRequest request) {
 
-    ApiError error = new ApiError(
-            LocalDateTime.now(),
-            401,
-            "Unauthorized",
-            ex.getMessage(),
-            request.getRequestURI(),
-            null);
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                401,
+                "Unauthorized",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null);
 
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(error);
-}
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(error);
+    }
 
+    // A logged-in user tried something their role does not allow
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
 
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                403,
+                "Forbidden",
+                "You do not have permission to do that. Ask an administrator.",
+                request.getRequestURI(),
+                null);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error);
+    }
 }

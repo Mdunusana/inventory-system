@@ -1,5 +1,12 @@
 const API_BASE_URL = "http://localhost:8080";
 
+// Friendly messages when the server does not send its own
+const STATUS_MESSAGES = {
+    403: "You do not have permission to do that.",
+    404: "That item could not be found. It may have been removed.",
+    500: "Something went wrong on the server. Please try again."
+};
+
 function getToken() {
     return sessionStorage.getItem("token");
 }
@@ -51,10 +58,21 @@ export async function apiRequest(
         }
 
         if (!response.ok) {
-            throw new Error(
-                data?.message ||
-                    `Request failed (${response.status})`
-            );
+            // "Validation failed" is vague: show the first field's reason instead
+            const fieldMessages = data?.fieldErrors
+                ? Object.values(data.fieldErrors)
+                : [];
+
+            const message =
+                fieldMessages[0] ||
+                (response.status < 500 && data?.message) ||
+                STATUS_MESSAGES[response.status] ||
+                `Request failed (${response.status})`;
+
+            const error = new Error(message);
+            error.status = response.status;
+            error.fieldErrors = data?.fieldErrors || null;
+            throw error;
         }
 
         return data;
