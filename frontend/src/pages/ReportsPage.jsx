@@ -5,26 +5,6 @@ import StatusBadge from "../components/StatusBadge";
 
 const PAGE_SIZE = 20;
 
-const cellStyle = {
-    padding: "0.5rem",
-    borderBottom: "1px solid #ddd",
-    textAlign: "left"
-};
-
-const filterStyle = {
-    display: "flex",
-    gap: "1rem",
-    alignItems: "flex-end",
-    flexWrap: "wrap",
-    marginBottom: "1rem"
-};
-
-const inputStyle = {
-    padding: "0.4rem",
-    width: "auto",
-    display: "block"
-};
-
 function money(value) {
     return `R ${Number(value).toFixed(2)}`;
 }
@@ -35,11 +15,25 @@ function formatDate(value) {
 
 function Generated({ report }) {
     return (
-        <p style={{ color: "#666", fontSize: "0.85rem", marginTop: "1rem" }}>
-            {report.title} - generated {formatDate(report.generatedAt)}
+        <p className="report-footer">
+            {report.title} · generated {formatDate(report.generatedAt)}
         </p>
     );
 }
+
+function Loading() {
+    return <p className="muted">Loading report...</p>;
+}
+
+function Empty({ text }) {
+    return <div className="card empty-state">{text}</div>;
+}
+
+const MOVEMENT_TONES = {
+    RECEIVED: "badge-success",
+    SALE: "badge-neutral",
+    ADJUSTMENT: "badge-warning"
+};
 
 // ---------------------------------------------------------------
 // Best Selling
@@ -77,62 +71,82 @@ function BestSellingReport() {
         };
     }, [applied]);
 
+    // The top seller fills the whole bar; the others are a share of it
+    const topUnits = report?.rows[0]?.unitsSold || 1;
+
     return (
         <div>
             <form
-                style={filterStyle}
+                className="card filter-bar"
                 onSubmit={(e) => {
                     e.preventDefault();
                     setApplied({ from, to, limit });
                 }}
             >
-                <label>
-                    From
-                    <input type="date" value={from}
-                        onChange={(e) => setFrom(e.target.value)} style={inputStyle} />
-                </label>
-                <label>
-                    To
-                    <input type="date" value={to}
-                        onChange={(e) => setTo(e.target.value)} style={inputStyle} />
-                </label>
-                <label>
-                    Top
+                <div>
+                    <label>From</label>
+                    <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+                </div>
+                <div>
+                    <label>To</label>
+                    <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                </div>
+                <div>
+                    <label>Top</label>
                     <input type="number" min="1" max="100" value={limit}
-                        onChange={(e) => setLimit(e.target.value)} style={inputStyle} />
-                </label>
-                <button type="submit">Run Report</button>
+                        onChange={(e) => setLimit(e.target.value)} />
+                </div>
+                <button type="submit">Run report</button>
             </form>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
             {!report ? (
-                <p>Loading report...</p>
+                <Loading />
             ) : report.rows.length === 0 ? (
-                <p>No sales in this period.</p>
+                <Empty text="No sales in this period." />
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Rank</th>
-                            <th style={cellStyle}>Product</th>
-                            <th style={cellStyle}>Units Sold</th>
-                            <th style={cellStyle}>Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {report.rows.map((row) => (
-                            <tr key={row.productId}>
-                                <td style={cellStyle}>{row.rank}</td>
-                                <td style={cellStyle}>
-                                    {row.productCode} - {row.productName}
-                                </td>
-                                <td style={cellStyle}>{row.unitsSold}</td>
-                                <td style={cellStyle}>{money(row.revenue)}</td>
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Product</th>
+                                <th>Units sold</th>
+                                <th className="cell-number">Revenue</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {report.rows.map((row) => (
+                                <tr key={row.productId}>
+                                    <td>
+                                        <span className={`rank rank-${row.rank}`}>{row.rank}</span>
+                                    </td>
+                                    <td>
+                                        <div className="list-title">{row.productName}</div>
+                                        <div className="list-meta">{row.productCode}</div>
+                                    </td>
+                                    <td>
+                                        <div className="bar-cell">
+                                            <div className="bar">
+                                                <div
+                                                    className="bar-fill"
+                                                    style={{
+                                                        width: `${(row.unitsSold / topUnits) * 100}%`
+                                                    }}
+                                                />
+                                            </div>
+                                            <span>{row.unitsSold}</span>
+                                        </div>
+                                    </td>
+                                    <td className="cell-number">
+                                        <strong>{money(row.revenue)}</strong>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {report && <Generated report={report} />}
@@ -179,56 +193,61 @@ function SlowMovingReport() {
     return (
         <div>
             <form
-                style={filterStyle}
+                className="card filter-bar"
                 onSubmit={(e) => {
                     e.preventDefault();
                     setApplied({ days, threshold });
                 }}
             >
-                <label>
-                    In the last (days)
+                <div>
+                    <label>In the last (days)</label>
                     <input type="number" min="1" value={days}
-                        onChange={(e) => setDays(e.target.value)} style={inputStyle} />
-                </label>
-                <label>
-                    Sold fewer than (units)
+                        onChange={(e) => setDays(e.target.value)} />
+                </div>
+                <div>
+                    <label>Sold fewer than (units)</label>
                     <input type="number" min="1" value={threshold}
-                        onChange={(e) => setThreshold(e.target.value)} style={inputStyle} />
-                </label>
-                <button type="submit">Run Report</button>
+                        onChange={(e) => setThreshold(e.target.value)} />
+                </div>
+                <button type="submit">Run report</button>
             </form>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
             {!report ? (
-                <p>Loading report...</p>
+                <Loading />
             ) : report.rows.length === 0 ? (
-                <p>No slow-moving products. Everything is selling.</p>
+                <Empty text="No slow-moving products. Everything is selling." />
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Product</th>
-                            <th style={cellStyle}>Category</th>
-                            <th style={cellStyle}>In Stock</th>
-                            <th style={cellStyle}>Units Sold</th>
-                            <th style={cellStyle}>Last Sale</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {report.rows.map((row) => (
-                            <tr key={row.productId}>
-                                <td style={cellStyle}>
-                                    {row.productCode} - {row.productName}
-                                </td>
-                                <td style={cellStyle}>{row.categoryName}</td>
-                                <td style={cellStyle}>{row.currentStock}</td>
-                                <td style={cellStyle}>{row.unitsSold}</td>
-                                <td style={cellStyle}>{formatDate(row.lastSaleDate)}</td>
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th className="cell-number">In stock</th>
+                                <th className="cell-number">Units sold</th>
+                                <th>Last sale</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {report.rows.map((row) => (
+                                <tr key={row.productId}>
+                                    <td>
+                                        <div className="list-title">{row.productName}</div>
+                                        <div className="list-meta">{row.productCode}</div>
+                                    </td>
+                                    <td>{row.categoryName}</td>
+                                    <td className="cell-number">{row.currentStock}</td>
+                                    <td className="cell-number">{row.unitsSold}</td>
+                                    <td className={row.lastSaleDate ? "" : "muted"}>
+                                        {formatDate(row.lastSaleDate)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {report && <Generated report={report} />}
@@ -269,39 +288,42 @@ function LowStockReport() {
 
     return (
         <div>
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
             {!data ? (
-                <p>Loading report...</p>
+                <Loading />
             ) : data.content.length === 0 ? (
-                <p>Nothing needs reordering.</p>
+                <Empty text="Nothing needs reordering." />
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Product</th>
-                            <th style={cellStyle}>Category</th>
-                            <th style={cellStyle}>In Stock</th>
-                            <th style={cellStyle}>Minimum</th>
-                            <th style={cellStyle}>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.content.map((row) => (
-                            <tr key={row.productId}>
-                                <td style={cellStyle}>
-                                    {row.productCode} - {row.productName}
-                                </td>
-                                <td style={cellStyle}>{row.categoryName}</td>
-                                <td style={cellStyle}>{row.currentStock}</td>
-                                <td style={cellStyle}>{row.minimumStockLevel}</td>
-                                <td style={cellStyle}>
-                                    <StatusBadge status={row.stockStatus} />
-                                </td>
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th className="cell-number">In stock</th>
+                                <th className="cell-number">Minimum</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {data.content.map((row) => (
+                                <tr key={row.productId}>
+                                    <td>
+                                        <div className="list-title">{row.productName}</div>
+                                        <div className="list-meta">{row.productCode}</div>
+                                    </td>
+                                    <td>{row.categoryName}</td>
+                                    <td className="cell-number">{row.currentStock}</td>
+                                    <td className="cell-number">{row.minimumStockLevel}</td>
+                                    <td>
+                                        <StatusBadge status={row.stockStatus} />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {data && data.totalPages > 1 && (
@@ -360,82 +382,91 @@ function StockMovementsReport() {
     return (
         <div>
             <form
-                style={filterStyle}
+                className="card filter-bar"
                 onSubmit={(e) => {
                     e.preventDefault();
                     setPage(0);
                     setApplied({ from, to, type });
                 }}
             >
-                <label>
-                    From
-                    <input type="date" value={from}
-                        onChange={(e) => setFrom(e.target.value)} style={inputStyle} />
-                </label>
-                <label>
-                    To
-                    <input type="date" value={to}
-                        onChange={(e) => setTo(e.target.value)} style={inputStyle} />
-                </label>
-                <label>
-                    Type
-                    <select value={type}
-                        onChange={(e) => setType(e.target.value)} style={inputStyle}>
+                <div>
+                    <label>From</label>
+                    <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+                </div>
+                <div>
+                    <label>To</label>
+                    <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                </div>
+                <div>
+                    <label>Type</label>
+                    <select value={type} onChange={(e) => setType(e.target.value)}>
                         <option value="">All</option>
                         <option value="RECEIVED">Received</option>
                         <option value="SALE">Sale</option>
                         <option value="ADJUSTMENT">Adjustment</option>
                     </select>
-                </label>
-                <button type="submit">Run Report</button>
+                </div>
+                <button type="submit">Run report</button>
             </form>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
             {!data ? (
-                <p>Loading report...</p>
+                <Loading />
             ) : data.content.length === 0 ? (
-                <p>No stock movements match.</p>
+                <Empty text="No stock movements match." />
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Date</th>
-                            <th style={cellStyle}>Product</th>
-                            <th style={cellStyle}>Type</th>
-                            <th style={cellStyle}>Change</th>
-                            <th style={cellStyle}>By</th>
-                            <th style={cellStyle}>Reference / Reason</th>
-                            <th style={cellStyle}>Sale #</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.content.map((row) => (
-                            <tr key={row.stockMovementId}>
-                                <td style={cellStyle}>{formatDate(row.movementDate)}</td>
-                                <td style={cellStyle}>
-                                    {row.productCode} - {row.productName}
-                                </td>
-                                <td style={cellStyle}>{row.movementType}</td>
-                                <td
-                                    style={{
-                                        ...cellStyle,
-                                        fontWeight: "bold",
-                                        color: row.quantityChange > 0 ? "#198754" : "#dc3545"
-                                    }}
-                                >
-                                    {row.quantityChange > 0 ? "+" : ""}
-                                    {row.quantityChange}
-                                </td>
-                                <td style={cellStyle}>{row.userName}</td>
-                                <td style={cellStyle}>
-                                    {row.reference || row.reason || "-"}
-                                </td>
-                                <td style={cellStyle}>{row.saleId ?? "-"}</td>
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Type</th>
+                                <th className="cell-number">Change</th>
+                                <th>By</th>
+                                <th>Reference / reason</th>
+                                <th>Sale</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {data.content.map((row) => (
+                                <tr key={row.stockMovementId}>
+                                    <td className="nowrap">{formatDate(row.movementDate)}</td>
+                                    <td>
+                                        <div className="list-title">{row.productName}</div>
+                                        <div className="list-meta">{row.productCode}</div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            className={`badge ${
+                                                MOVEMENT_TONES[row.movementType] || "badge-neutral"
+                                            }`}
+                                        >
+                                            {row.movementType.charAt(0) +
+                                                row.movementType.slice(1).toLowerCase()}
+                                        </span>
+                                    </td>
+                                    <td
+                                        className={`cell-number ${
+                                            row.quantityChange > 0 ? "text-success" : "text-danger"
+                                        }`}
+                                    >
+                                        <strong>
+                                            {row.quantityChange > 0 ? "+" : ""}
+                                            {row.quantityChange}
+                                        </strong>
+                                    </td>
+                                    <td>{row.userName}</td>
+                                    <td className={row.reference || row.reason ? "" : "muted"}>
+                                        {row.reference || row.reason || "-"}
+                                    </td>
+                                    <td>{row.saleId ? `#${row.saleId}` : <span className="muted">-</span>}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {data && data.totalPages > 1 && (
@@ -454,10 +485,10 @@ function StockMovementsReport() {
 // The page with tabs
 // ---------------------------------------------------------------
 const TABS = [
-    { key: "best", label: "Best Selling" },
-    { key: "slow", label: "Slow Moving" },
-    { key: "low", label: "Low Stock" },
-    { key: "movements", label: "Stock Movements" }
+    { key: "best", label: "Best selling" },
+    { key: "slow", label: "Slow moving" },
+    { key: "low", label: "Low stock" },
+    { key: "movements", label: "Stock movements" }
 ];
 
 export default function ReportsPage() {
@@ -465,17 +496,22 @@ export default function ReportsPage() {
 
     return (
         <div>
-            <h1>Reports</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Reports</h1>
+                    <p className="page-subtitle">
+                        See what sells, what doesn't, and every stock change.
+                    </p>
+                </div>
+            </div>
 
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+            <div className="tabs">
                 {TABS.map((t) => (
                     <button
                         key={t.key}
+                        type="button"
+                        className={`tab ${tab === t.key ? "tab-active" : ""}`}
                         onClick={() => setTab(t.key)}
-                        style={{
-                            opacity: tab === t.key ? 1 : 0.6,
-                            fontWeight: tab === t.key ? "bold" : "normal"
-                        }}
                     >
                         {t.label}
                     </button>

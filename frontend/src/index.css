@@ -813,3 +813,100 @@ tbody tr:last-child td {
     margin: 0 0 0.75rem;
     font-size: 0.88rem;
 }
+/* ---------- Tabs ---------- */
+
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+}
+
+.tab {
+    background: none;
+    color: var(--muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 0.7rem 1rem;
+    margin-bottom: -1px;
+    white-space: nowrap;
+}
+
+.tab:hover {
+    background: none;
+    color: var(--text);
+}
+
+.tab-active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* ---------- Report filters ---------- */
+
+.filter-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.filter-bar > div {
+    min-width: 160px;
+}
+
+.filter-bar label {
+    margin-bottom: 0.3rem;
+}
+
+.report-footer {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+}
+
+/* ---------- Ranks and bars ---------- */
+
+.rank {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.rank-1 { background: #fef3c7; color: #b45309; }
+.rank-2 { background: #e5e7eb; color: #374151; }
+.rank-3 { background: #fde2cf; color: #9a3412; }
+
+.bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 160px;
+}
+
+.bar {
+    flex: 1;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 999px;
+}
+
+.text-success { color: var(--success); }
+.text-danger  { color: var(--danger); }
+.nowrap { white-space: nowrap; }
