@@ -2,30 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { get, post } from "../api/client";
 import { useAuth } from "../auth/authContext";
 import FormField from "../components/FormField";
+import Icon from "../components/Icon";
 import Pagination from "../components/Pagination";
 import StatusBadge from "../components/StatusBadge";
 
 const PAGE_SIZE = 10;
-
-const cellStyle = {
-    padding: "0.5rem",
-    borderBottom: "1px solid #ddd",
-    textAlign: "left"
-};
-
-const inputStyle = {
-    width: "100%",
-    padding: "0.5rem",
-    boxSizing: "border-box"
-};
-
-const panelStyle = {
-    flex: 1,
-    minWidth: "280px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    padding: "1rem"
-};
 
 const emptyReceive = { productId: "", quantity: "", reference: "" };
 const emptyAdjust = { productId: "", quantityChange: "", reason: "" };
@@ -77,33 +58,28 @@ export default function StockPage() {
         }
     }, [page, search, status]);
 
+    // Active products for the two dropdowns
+    const loadProducts = useCallback(async () => {
+        try {
+            const data = await get("/api/products?active=true&size=100");
+            setProducts(data.content);
+        } catch (err) {
+            setFormError(err.message);
+        }
+    }, []);
+
     useEffect(() => {
         loadStock();
     }, [loadStock]);
 
-    // Active products for the two dropdowns (loaded once)
     useEffect(() => {
-        let cancelled = false;
-
-        async function loadProducts() {
-            try {
-                const data = await get("/api/products?active=true&size=100");
-                if (!cancelled) {
-                    setProducts(data.content);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    setFormError(err.message);
-                }
-            }
-        }
-
         loadProducts();
+    }, [loadProducts]);
 
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+    // After a change, refresh both the table and the dropdowns
+    async function refreshAll() {
+        await Promise.all([loadStock(), loadProducts()]);
+    }
 
     // Turns the backend's answer into a friendly sentence
     function describe(result) {
@@ -141,7 +117,7 @@ export default function StockPage() {
 
             setMessage(`Stock received. ${describe(result)}`);
             setReceive(emptyReceive);
-            await loadStock();
+            await refreshAll();
         } catch (err) {
             setFormError(err.message);
         } finally {
@@ -182,7 +158,7 @@ export default function StockPage() {
 
             setMessage(`Stock adjusted. ${describe(result)}`);
             setAdjust(emptyAdjust);
-            await loadStock();
+            await refreshAll();
         } catch (err) {
             setFormError(err.message);
         } finally {
@@ -202,24 +178,30 @@ export default function StockPage() {
 
     return (
         <div>
-            <h1>Stock</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Stock</h1>
+                    <p className="page-subtitle">
+                        Receive deliveries, correct counts and watch stock levels.
+                    </p>
+                </div>
+            </div>
+
+            {message && <div className="success-message">{message}</div>}
+            {formError && <div className="error-message">{formError}</div>}
 
             {/* ---------- Forms ---------- */}
-            {message && (
-                <p style={{ color: "green", fontWeight: "bold" }}>{message}</p>
-            )}
-            {formError && <p style={{ color: "red" }}>{formError}</p>}
-
-            <div
-                style={{
-                    display: "flex",
-                    gap: "1rem",
-                    flexWrap: "wrap",
-                    marginBottom: "2rem"
-                }}
-            >
-                <form onSubmit={handleReceive} style={panelStyle} noValidate>
-                    <h3>Receive Stock</h3>
+            <div className="panel-grid section">
+                <form onSubmit={handleReceive} className="card" noValidate>
+                    <div className="form-title">
+                        <div className="stat-icon tone-success">
+                            <Icon name="plus" size={18} />
+                        </div>
+                        <div>
+                            <h2>Receive Stock</h2>
+                            <p className="muted">A delivery arrived from a supplier.</p>
+                        </div>
+                    </div>
 
                     <FormField label="Product">
                         <select
@@ -227,9 +209,8 @@ export default function StockPage() {
                             onChange={(e) =>
                                 setReceive({ ...receive, productId: e.target.value })
                             }
-                            style={inputStyle}
                         >
-                            <option value="">-- Choose a product --</option>
+                            <option value="">Choose a product</option>
                             {productOptions()}
                         </select>
                     </FormField>
@@ -239,23 +220,23 @@ export default function StockPage() {
                             type="number"
                             min="1"
                             step="1"
+                            placeholder="e.g. 20"
                             value={receive.quantity}
                             onChange={(e) =>
                                 setReceive({ ...receive, quantity: e.target.value })
                             }
-                            style={inputStyle}
                         />
                     </FormField>
 
-                    <FormField label="Reference (optional, e.g. delivery note)">
+                    <FormField label="Reference (optional)">
                         <input
                             type="text"
                             maxLength={100}
+                            placeholder="e.g. delivery note DN-1042"
                             value={receive.reference}
                             onChange={(e) =>
                                 setReceive({ ...receive, reference: e.target.value })
                             }
-                            style={inputStyle}
                         />
                     </FormField>
 
@@ -265,8 +246,18 @@ export default function StockPage() {
                 </form>
 
                 {isAdmin && (
-                    <form onSubmit={handleAdjust} style={panelStyle} noValidate>
-                        <h3>Adjust Stock (Admin)</h3>
+                    <form onSubmit={handleAdjust} className="card" noValidate>
+                        <div className="form-title">
+                            <div className="stat-icon tone-warning">
+                                <Icon name="alert" size={18} />
+                            </div>
+                            <div>
+                                <h2>Adjust Stock</h2>
+                                <p className="muted">
+                                    Fix a count after damage, loss or a stock take.
+                                </p>
+                            </div>
+                        </div>
 
                         <FormField label="Product">
                             <select
@@ -274,9 +265,8 @@ export default function StockPage() {
                                 onChange={(e) =>
                                     setAdjust({ ...adjust, productId: e.target.value })
                                 }
-                                style={inputStyle}
                             >
-                                <option value="">-- Choose a product --</option>
+                                <option value="">Choose a product</option>
                                 {productOptions()}
                             </select>
                         </FormField>
@@ -285,6 +275,7 @@ export default function StockPage() {
                             <input
                                 type="number"
                                 step="1"
+                                placeholder="e.g. -2"
                                 value={adjust.quantityChange}
                                 onChange={(e) =>
                                     setAdjust({
@@ -292,7 +283,6 @@ export default function StockPage() {
                                         quantityChange: e.target.value
                                     })
                                 }
-                                style={inputStyle}
                             />
                         </FormField>
 
@@ -300,15 +290,15 @@ export default function StockPage() {
                             <input
                                 type="text"
                                 maxLength={255}
+                                placeholder="e.g. 2 units damaged in storage"
                                 value={adjust.reason}
                                 onChange={(e) =>
                                     setAdjust({ ...adjust, reason: e.target.value })
                                 }
-                                style={inputStyle}
                             />
                         </FormField>
 
-                        <button type="submit" disabled={saving}>
+                        <button type="submit" className="btn-secondary" disabled={saving}>
                             {saving ? "Saving..." : "Adjust Stock"}
                         </button>
                     </form>
@@ -316,10 +306,11 @@ export default function StockPage() {
             </div>
 
             {/* ---------- Stock levels table ---------- */}
-            <h2>Stock Levels</h2>
+            <h2>Stock levels</h2>
 
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+            <div className="toolbar">
                 <input
+                    className="search"
                     type="text"
                     placeholder="Search by name or code"
                     value={search}
@@ -327,7 +318,6 @@ export default function StockPage() {
                         setSearch(e.target.value);
                         setPage(0);
                     }}
-                    style={{ padding: "0.5rem", flex: 2 }}
                 />
 
                 <select
@@ -336,48 +326,51 @@ export default function StockPage() {
                         setStatus(e.target.value);
                         setPage(0);
                     }}
-                    style={{ padding: "0.5rem", flex: 1 }}
                 >
                     <option value="">All statuses</option>
-                    <option value="OK">OK</option>
+                    <option value="OK">In stock</option>
                     <option value="LOW_STOCK">Low stock</option>
                     <option value="OUT_OF_STOCK">Out of stock</option>
                 </select>
             </div>
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="error-message">{error}</div>}
 
             {loading ? (
-                <p>Loading stock...</p>
+                <p className="muted">Loading stock...</p>
             ) : rows.length === 0 ? (
-                <p>No products match.</p>
+                <div className="card empty-state">No products match.</div>
             ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                        <tr>
-                            <th style={cellStyle}>Code</th>
-                            <th style={cellStyle}>Name</th>
-                            <th style={cellStyle}>Category</th>
-                            <th style={cellStyle}>In Stock</th>
-                            <th style={cellStyle}>Minimum</th>
-                            <th style={cellStyle}>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map((row) => (
-                            <tr key={row.productId}>
-                                <td style={cellStyle}>{row.productCode}</td>
-                                <td style={cellStyle}>{row.productName}</td>
-                                <td style={cellStyle}>{row.categoryName}</td>
-                                <td style={cellStyle}>{row.currentStock}</td>
-                                <td style={cellStyle}>{row.minimumStockLevel}</td>
-                                <td style={cellStyle}>
-                                    <StatusBadge status={row.stockStatus} />
-                                </td>
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th className="cell-number">In stock</th>
+                                <th className="cell-number">Minimum</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {rows.map((row) => (
+                                <tr key={row.productId}>
+                                    <td className="cell-code">{row.productCode}</td>
+                                    <td>
+                                        <div className="list-title">{row.productName}</div>
+                                    </td>
+                                    <td>{row.categoryName}</td>
+                                    <td className="cell-number">{row.currentStock}</td>
+                                    <td className="cell-number">{row.minimumStockLevel}</td>
+                                    <td>
+                                        <StatusBadge status={row.stockStatus} />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {totalPages > 1 && (
