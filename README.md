@@ -126,6 +126,16 @@ Open http://localhost:5173
 
 Change these passwords after your first login (**Change Password** in the sidebar).
 
+## Running it online
+
+The whole system is packaged into one Docker container (see `Dockerfile`): the React screens are built and placed inside the Spring Boot app, so one web address serves both the screens and the API.
+
+- **Database:** TiDB Cloud Starter (free, MySQL-compatible). Run `database/01_schema.sql` and `database/02_sample_data.sql` there.
+- **App:** Render web service built from this repository's `Dockerfile`.
+- **Settings:** `src/main/resources/application-prod.properties` reads `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` and `JWT_SECRET` from environment variables, so no secrets are stored in Git.
+
+The free Render plan sleeps after 15 minutes without visitors; the first visit after that takes about a minute to load.
+
 ## Tests
 
 ```

@@ -1,4 +1,11 @@
-const API_BASE_URL = "http://localhost:8080";
+// Where the backend lives.
+// - On your laptop (npm run dev) the backend runs separately on port 8080.
+// - Online, the backend serves these screens itself, so the address is the
+//   same website and we only need the path (e.g. "/api/products").
+// You can override it by setting VITE_API_URL before building.
+export const API_BASE_URL =
+    import.meta.env.VITE_API_URL ??
+    (import.meta.env.DEV ? "http://localhost:8080" : "");
 
 // Friendly messages when the server does not send its own
 const STATUS_MESSAGES = {

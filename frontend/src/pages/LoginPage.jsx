@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
 import Icon from "../components/Icon";
+import { API_BASE_URL } from "../api/client";
 
 // The middle part of a JWT holds the user's details, encoded in base64.
 // We only read it to decide what to SHOW; the backend still checks every request.
@@ -35,7 +36,7 @@ export default function LoginPage() {
 
         try {
             const response = await fetch(
-                "http://localhost:8080/api/auth/login",
+                `${API_BASE_URL}/api/auth/login`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
